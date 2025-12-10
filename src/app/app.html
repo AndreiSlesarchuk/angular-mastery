@@ -1,0 +1,327 @@
+<div class="app-container">
+  <!-- === HEADER === -->
+  <header class="app-header">
+    <div class="header-content">
+      <h1>{{ title() }}</h1>
+      <p class="subtitle">Your React + Spring Boot experience applied to Angular</p>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number">{{ users().length }}</span>
+          <span class="stat-label">Total Users</span>
+        </div>
+        <div class="stat-card stat-success">
+          <span class="stat-number">{{ activeUsersCount() }}</span>
+          <span class="stat-label">Active</span>
+        </div>
+        <div class="stat-card stat-warning">
+          <span class="stat-number">{{ users().length - activeUsersCount() }}</span>
+          <span class="stat-label">Inactive</span>
+        </div>
+        <div class="stat-card stat-info">
+          <span class="stat-number">{{ activeUsersPercentage() }}%</span>
+          <span class="stat-label">Active Rate</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- === MAIN CONTENT === -->
+  <main class="app-main">
+    
+    <!-- LEFT COLUMN: Form & Filters -->
+    <div class="left-column">
+      
+      <!-- User Form -->
+      <section class="card form-section">
+        <h2 class="section-title">
+          <span *ngIf="editingUserId === null">➕ Add New User</span>
+          <span *ngIf="editingUserId !== null">✏️ Edit User #{{ editingUserId }}</span>
+        </h2>
+        
+        <div class="form-group">
+          <label for="userName">Full Name</label>
+          <input 
+            id="userName"
+            type="text" 
+            [(ngModel)]="newUser.name" 
+            placeholder="Enter full name"
+            class="form-control"
+          >
+          <small class="form-hint">Required field</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="userEmail">Email Address</label>
+          <input 
+            id="userEmail"
+            type="email" 
+            [(ngModel)]="newUser.email" 
+            placeholder="user@example.com"
+            class="form-control"
+          >
+          <small class="form-hint">Valid email required</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="userRole">Role</label>
+          <select 
+            id="userRole"
+            [(ngModel)]="newUser.role" 
+            class="form-control"
+          >
+            <option [value]="UserRole.ADMIN">Administrator</option>
+            <option [value]="UserRole.USER">Regular User</option>
+            <option [value]="UserRole.GUEST">Guest</option>
+          </select>
+        </div>
+        
+        <div class="form-actions">
+          <button 
+            *ngIf="editingUserId === null"
+            (click)="addUser()"
+            [disabled]="!newUser.name || !newUser.email"
+            class="btn btn-primary btn-lg"
+          >
+            <span class="btn-icon">➕</span>
+            Add User
+          </button>
+          
+          <div *ngIf="editingUserId !== null" class="edit-actions">
+            <button 
+              (click)="updateUser()"
+              [disabled]="!newUser.name || !newUser.email"
+              class="btn btn-success"
+            >
+              <span class="btn-icon">💾</span>
+              Save Changes
+            </button>
+            <button 
+              (click)="cancelEdit()"
+              class="btn btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Filters -->
+      <section class="card filters-section">
+        <h2 class="section-title">🔍 Filter Users</h2>
+        
+        <div class="filter-buttons">
+          <button 
+            (click)="setFilter('ALL')"
+            [class.active]="currentFilter === 'ALL'"
+            class="filter-btn"
+          >
+            All ({{ users().length }})
+          </button>
+          <button 
+            (click)="setFilter(UserRole.ADMIN)"
+            [class.active]="currentFilter === UserRole.ADMIN"
+            class="filter-btn"
+          >
+            Admins ({{ getRoleStats(UserRole.ADMIN).count }})
+          </button>
+          <button 
+            (click)="setFilter(UserRole.USER)"
+            [class.active]="currentFilter === UserRole.USER"
+            class="filter-btn"
+          >
+            Users ({{ getRoleStats(UserRole.USER).count }})
+          </button>
+          <button 
+            (click)="setFilter(UserRole.GUEST)"
+            [class.active]="currentFilter === UserRole.GUEST"
+            class="filter-btn"
+          >
+            Guests ({{ getRoleStats(UserRole.GUEST).count }})
+          </button>
+        </div>
+        
+        <div class="role-stats">
+          <h3>Role Statistics:</h3>
+          <div class="stats-list">
+            <div class="stat-item">
+              <span class="stat-role admin">ADMIN</span>
+              <span class="stat-numbers">
+                {{ getRoleStats(UserRole.ADMIN).active }}/{{ getRoleStats(UserRole.ADMIN).count }} active
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-role user">USER</span>
+              <span class="stat-numbers">
+                {{ getRoleStats(UserRole.USER).active }}/{{ getRoleStats(UserRole.USER).count }} active
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-role guest">GUEST</span>
+              <span class="stat-numbers">
+                {{ getRoleStats(UserRole.GUEST).active }}/{{ getRoleStats(UserRole.GUEST).count }} active
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- RIGHT COLUMN: User List -->
+    <div class="right-column">
+      <section class="card users-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            👥 User Management 
+            <span class="badge">{{ filteredUsers().length }} users</span>
+          </h2>
+          
+          <div class="loading-indicator" *ngIf="isLoading()">
+            <div class="spinner"></div>
+            <span>Loading users...</span>
+          </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div *ngIf="!isLoading() && filteredUsers().length === 0" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>No users found</h3>
+          <p *ngIf="currentFilter !== 'ALL'">
+            No users with role "{{ currentFilter }}". Try changing the filter.
+          </p>
+          <p *ngIf="currentFilter === 'ALL'">
+            Your user list is empty. Add your first user!
+          </p>
+        </div>
+        
+        <!-- User Grid -->
+        <div *ngIf="!isLoading() && filteredUsers().length > 0" class="users-grid">
+          <div *ngFor="let user of filteredUsers()" 
+               class="user-card"
+               [class.user-inactive]="!user.active">
+            
+            <!-- User Card Header -->
+            <div class="user-card-header">
+              <div class="user-avatar">
+                {{ user.name.charAt(0) }}
+              </div>
+              <div class="user-info">
+                <h3 class="user-name">{{ user.name }}</h3>
+                <p class="user-email">{{ user.email }}</p>
+              </div>
+              <div class="user-badges">
+                <span class="badge" 
+                      [class.badge-admin]="user.role === UserRole.ADMIN"
+                      [class.badge-user]="user.role === UserRole.USER"
+                      [class.badge-guest]="user.role === UserRole.GUEST">
+                  {{ user.role }}
+                </span>
+                <span class="badge" 
+                      [class.badge-active]="user.active"
+                      [class.badge-inactive]="!user.active">
+                  {{ user.active ? 'ACTIVE' : 'INACTIVE' }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- User Card Body -->
+            <div class="user-card-body">
+              <div class="user-details">
+                <div class="detail-item">
+                  <span class="detail-label">ID:</span>
+                  <span class="detail-value">#{{ user.id }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Created:</span>
+                  <span class="detail-value">{{ formatDate(user.createdAt) }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Status:</span>
+                  <span class="detail-value" 
+                        [class.text-success]="user.active"
+                        [class.text-danger]="!user.active">
+                    {{ user.active ? '✅ Active' : '❌ Inactive' }}
+                  </span>
+                </div>
+              </div>
+              
+              <!-- User Actions -->
+              <div class="user-actions">
+                <button 
+                  (click)="startEdit(user)"
+                  class="btn btn-sm btn-outline"
+                  title="Edit user"
+                >
+                  <span class="btn-icon">✏️</span>
+                  Edit
+                </button>
+                
+                <button 
+                  (click)="toggleUserActive(user.id)"
+                  [class.btn-warning]="user.active"
+                  [class.btn-success]="!user.active"
+                  class="btn btn-sm"
+                  title="Toggle active status"
+                >
+                  <span class="btn-icon">{{ user.active ? '⏸️' : '▶️' }}</span>
+                  {{ user.active ? 'Deactivate' : 'Activate' }}
+                </button>
+                
+                <button 
+                  (click)="deleteUser(user.id)"
+                  class="btn btn-sm btn-danger"
+                  title="Delete user"
+                >
+                  <span class="btn-icon">🗑️</span>
+                  Delete
+                </button>
+              </div>
+            </div>
+            
+            <!-- User Card Footer -->
+            <div class="user-card-footer" *ngIf="user.role === UserRole.ADMIN">
+              <span class="admin-badge">🔐 Has administrative privileges</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pagination/Info -->
+        <div *ngIf="filteredUsers().length > 0" class="users-footer">
+          <p class="showing-text">
+            Showing {{ filteredUsers().length }} of {{ users().length }} users
+            <span *ngIf="currentFilter !== 'ALL'">(filtered by {{ currentFilter }})</span>
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+  
+  <!-- === FOOTER === -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <div class="tech-stack">
+        <span class="tech-item">Angular v21</span>
+        <span class="tech-item">Standalone Components</span>
+        <span class="tech-item">Signals API</span>
+        <span class="tech-item">TypeScript 5.3</span>
+      </div>
+      <p class="footer-note">
+        Built with ❤️ for React/Spring developers learning Angular
+      </p>
+      <p class="footer-links">
+        <a href="#" class="footer-link">Components</a>
+        •
+        <a href="#" class="footer-link">Services</a>
+        •
+        <a href="#" class="footer-link">Models</a>
+        •
+        <a href="#" class="footer-link">Routing</a>
+      </p>
+    </div>
+  </footer>
+  
+  <!-- Router Outlet for future features -->
+  <div class="router-container">
+    <router-outlet></router-outlet>
+  </div>
+</div>
