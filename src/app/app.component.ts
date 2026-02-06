@@ -3,23 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 
-// Импорт типов
 import { User } from './models/user.model';
 import { UserService } from './services/user.service';
 
-// Импортируем UserRole как отдельную константу
 import { UserRole as UserRoleEnum } from './models/user.model';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss'
 })
 export class App implements OnInit {
   // === EXPORT ENUM FOR TEMPLATE ===
-  // Делаем UserRole доступным в шаблоне
+  // Make UserRole available in the template.
   readonly UserRole = UserRoleEnum;
   
   // === SIGNALS ===
@@ -31,7 +29,7 @@ export class App implements OnInit {
   newUser = {
     name: '',
     email: '',
-    role: UserRoleEnum.USER  // Используем enum здесь
+    role: UserRoleEnum.USER
   };
   
   editingUserId: number | null = null;
@@ -74,7 +72,7 @@ export class App implements OnInit {
     const mockUsers: User[] = [
       {
         id: 1,
-        name: 'Иван (Spring Developer)',
+        name: 'Ivan (Spring Developer)',
         email: 'ivan@springboot.com',
         role: UserRoleEnum.ADMIN,
         createdAt: new Date('2024-01-15T10:30:00'),
@@ -82,7 +80,7 @@ export class App implements OnInit {
       },
       {
         id: 2,
-        name: 'Мария (React Developer)',
+        name: 'Maria (React Developer)',
         email: 'maria@react.com',
         role: UserRoleEnum.USER,
         createdAt: new Date('2024-02-20T14:45:00'),
@@ -90,7 +88,7 @@ export class App implements OnInit {
       },
       {
         id: 3,
-        name: 'Алексей (Angular Developer)',
+        name: 'Alex (Angular Developer)',
         email: 'alex@angular.com',
         role: UserRoleEnum.USER,
         createdAt: new Date('2024-03-10T09:15:00'),
@@ -98,7 +96,7 @@ export class App implements OnInit {
       },
       {
         id: 4,
-        name: 'Екатерина (Full Stack)',
+        name: 'Kate (Full Stack)',
         email: 'kate@fullstack.com',
         role: UserRoleEnum.ADMIN,
         createdAt: new Date('2024-01-25T16:20:00'),
@@ -106,7 +104,7 @@ export class App implements OnInit {
       },
       {
         id: 5,
-        name: 'Дмитрий (DevOps)',
+        name: 'Dmitry (DevOps)',
         email: 'dmitry@devops.com',
         role: UserRoleEnum.GUEST,
         createdAt: new Date('2024-03-01T11:00:00'),

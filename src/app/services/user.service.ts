@@ -6,7 +6,6 @@ import { User } from '../models/user.model';
   providedIn: 'root'
 })
 export class UserService {
-  // Временное хранилище (в реальном приложении - API calls)
   private users: User[] = [];
   
   constructor() {
@@ -15,11 +14,9 @@ export class UserService {
   
   // Получение всех пользователей
   getUsers(): Observable<User[]> {
-    // Имитация HTTP запроса
     return of(this.users).pipe(delay(500));
   }
   
-  // Создание пользователя
   createUser(userData: Omit<User, 'id' | 'createdAt'>): Observable<User> {
     const newUser: User = {
       ...userData,
@@ -31,7 +28,6 @@ export class UserService {
     return of(newUser).pipe(delay(300));
   }
   
-  // Обновление пользователя
   updateUser(id: number, userData: Partial<User>): Observable<User> {
     const index = this.users.findIndex(u => u.id === id);
     
@@ -43,7 +39,6 @@ export class UserService {
     throw new Error(`User with id ${id} not found`);
   }
   
-  // Удаление пользователя
   deleteUser(id: number): Observable<void> {
     this.users = this.users.filter(user => user.id !== id);
     return of(void 0).pipe(delay(300));
